@@ -1,0 +1,16 @@
+{
+  "name": "front-door-buzzer",
+  "version": "1.0.0",
+  "description": "A secure, web-based controller for your Sonoff switch, running on **Netlify** and connecting via Pipedream.",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "mkdir -p netlify/functions && cp toggle.js netlify/functions/ || true"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  }
+}

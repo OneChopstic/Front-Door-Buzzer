@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studio Access</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- VIEW 1: KEYPAD (Visible initially) -->
+    <div id="view-keypad" class="view active">
+        <div class="keypad-container">
+            <input type="password" id="pin-display" readonly placeholder="PIN">
+
+            <div class="keypad">
+                <button class="key" data-value="1">1</button>
+                <button class="key" data-value="2">2</button>
+                <button class="key" data-value="3">3</button>
+                <button class="key" data-value="4">4</button>
+                <button class="key" data-value="5">5</button>
+                <button class="key" data-value="6">6</button>
+                <button class="key" data-value="7">7</button>
+                <button class="key" data-value="8">8</button>
+                <button class="key" data-value="9">9</button>
+                <button class="key action-btn clear" id="clear-btn">C</button>
+                <button class="key" data-value="0">0</button>
+                <button class="key action-btn submit" id="submit-btn" disabled>→</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 2: BUZZER (Hidden initially) -->
+    <div id="view-buzzer" class="view">
+        <button id="buzzer-btn" class="buzzer">
+            <span>OPEN<br>DOOR</span>
+        </button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
