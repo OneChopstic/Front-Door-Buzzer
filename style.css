@@ -232,3 +232,16 @@ body {
         transform: scale(1);
     }
 }
+/* New Vertical Vibration for the Buzzing State */
+@keyframes buzz-vibration {
+    0% { transform: translate(0, 0); }
+    25% { transform: translate(0, -3px); }
+    50% { transform: translate(0, 3px); }
+    75% { transform: translate(0, -2px); }
+    100% { transform: translate(0, 0); }
+}
+
+.buzzer-vibrate {
+    animation: buzz-vibration 0.1s linear infinite !important;
+    box-shadow: 0 0 50px rgba(255, 158, 158, 0.8) !important;
+}
