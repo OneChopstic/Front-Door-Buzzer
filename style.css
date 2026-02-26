@@ -23,6 +23,8 @@
     font-weight: 700;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+    /* FIX: Kills the 300ms tap delay and stops double-tap zooming on mobile */
+    touch-action: manipulation;
 }
 
 body {
@@ -88,27 +90,10 @@ body {
 }
 
 @keyframes shake {
-
-    10%,
-    90% {
-        transform: translate3d(-1px, 0, 0);
-    }
-
-    20%,
-    80% {
-        transform: translate3d(2px, 0, 0);
-    }
-
-    30%,
-    50%,
-    70% {
-        transform: translate3d(-4px, 0, 0);
-    }
-
-    40%,
-    60% {
-        transform: translate3d(4px, 0, 0);
-    }
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
 }
 
 .keypad {
@@ -130,12 +115,16 @@ body {
     transition: background 0.2s, transform 0.1s;
 }
 
-.key:hover {
-    background: var(--key-hover);
-    transform: translateY(-2px);
+/* FIX: Hover only for mouse users to prevent "stuck" colors on phones */
+@media (hover: hover) {
+    .key:hover {
+        background: var(--key-hover);
+        transform: translateY(-2px);
+    }
 }
 
 .key:active {
+    background: var(--key-hover) !important;
     transform: scale(0.95);
 }
 
@@ -202,36 +191,6 @@ body {
     animation: success-pop 0.5s ease-out;
 }
 
-@keyframes pulse-soft {
-    0% {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    50% {
-        transform: scale(0.95);
-        opacity: 0.8;
-    }
-
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-@keyframes success-pop {
-    0% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.1);
-    }
-
-    100% {
-        transform: scale(1);
-    }
-}
 /* New Vertical Vibration for the Buzzing State */
 @keyframes buzz-vibration {
     0% { transform: translate(0, 0); }
@@ -244,4 +203,16 @@ body {
 .buzzer-vibrate {
     animation: buzz-vibration 0.1s linear infinite !important;
     box-shadow: 0 0 50px rgba(255, 158, 158, 0.8) !important;
+}
+
+@keyframes pulse-soft {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(0.95); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes success-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
 }
