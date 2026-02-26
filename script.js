@@ -12,6 +12,9 @@ let currentPin = '';
 // --- KEYPAD LOGIC ---
 keys.forEach(key => {
     key.addEventListener('click', () => {
+        // FIX: Remove focus so button doesn't stay colored on mobile
+        key.blur();
+
         const value = key.dataset.value;
         
         if (key.id === 'clear-btn') {
@@ -71,7 +74,7 @@ buzzerBtn.addEventListener('click', async () => {
 
     buzzerBtn.querySelector('span').innerText = '...';
     
-    // 2-second real-life delay
+    // 3-second real-life delay
     setTimeout(() => {
         // Trigger hardware
         fetch(`/.netlify/functions/toggle?pin=${currentPin}`).catch(() => {});
