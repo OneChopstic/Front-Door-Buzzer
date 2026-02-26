@@ -89,7 +89,7 @@ buzzerBtn.addEventListener('click', async () => {
             }, 5500); 
         }, 500); 
 
-    }, 2000); 
+    }, 3000); 
 });
 
 // --- RESET LOGIC ---
