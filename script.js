@@ -1,29 +1,94 @@
-const fetch = require('node-fetch');
+const viewKeypad = document.getElementById('view-keypad');
+const viewBuzzer = document.getElementById('view-buzzer');
+const pinDisplay = document.getElementById('pin-display');
+const keys = document.querySelectorAll('.key');
+const submitBtn = document.getElementById('submit-btn');
+const keypadContainer = document.querySelector('.keypad-container');
+const buzzerBtn = document.getElementById('buzzer-btn');
 
-exports.handler = async (event) => {
-    const headers = {
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json"
-    };
+let currentPin = '';
 
-    const { pin, checkOnly } = event.queryStringParameters || {};
-    const correctPin = process.env.STUDIO_PIN || '1945';
+// --- KEYPAD ---
+keys.forEach(key => {
+    key.addEventListener('click', () => {
+        const value = key.dataset.value;
+        if (key.id === 'clear-btn') {
+            currentPin = '';
+        } else if (key.id === 'submit-btn') {
+            checkPinWithServer();
+            return;
+        } else {
+            if (currentPin.length < 4) currentPin += value;
+        }
+        updateDisplay();
+    });
+});
 
-    if (pin !== correctPin) {
-        return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
-    }
+function updateDisplay() {
+    pinDisplay.value = '•'.repeat(currentPin.length);
+    submitBtn.disabled = currentPin.length !== 4;
+}
 
-    // If we just want to check if the PIN is right, stop here.
-    if (checkOnly === 'true') {
-        return { statusCode: 200, headers, body: JSON.stringify({ valid: true }) };
-    }
-
-    const url = 'https://api-v2.voicemonkey.io/trigger?token=be39fc0bdd0850f704fd1e65fe87a7e7_76dda27437714ebfeac85750b8aa932c&device=frontdoor-buzzer';
-
+async function checkPinWithServer() {
+    submitBtn.innerText = '...';
     try {
-        await fetch(url, { method: 'GET', timeout: 3000 });
-        return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
+        // Fast ping to Netlify to verify PIN without triggering hardware
+        const response = await fetch(`/.netlify/functions/toggle?pin=${currentPin}&checkOnly=true`);
+        
+        if (response.ok) {
+            transitionToBuzzer();
+        } else {
+            // Wrong PIN: SHAKE
+            keypadContainer.classList.add('shake');
+            setTimeout(() => {
+                keypadContainer.classList.remove('shake');
+                currentPin = '';
+                updateDisplay();
+            }, 500);
+        }
     } catch (e) {
-        return { statusCode: 200, headers, body: JSON.stringify({ success: true, note: "Timeout" }) };
+        alert("Offline");
+    } finally {
+        submitBtn.innerText = '→';
     }
-};
+}
+
+function transitionToBuzzer() {
+    viewKeypad.style.display = 'none';
+    viewBuzzer.style.display = 'flex';
+    viewBuzzer.classList.add('active');
+    buzzerBtn.querySelector('span').innerText = 'OPEN';
+}
+
+// --- BUZZER ACTION ---
+buzzerBtn.addEventListener('click', async () => {
+    if (buzzerBtn.classList.contains('active')) return;
+
+    buzzerBtn.querySelector('span').innerText = '...';
+    
+    // 2-second real-life delay
+    setTimeout(() => {
+        buzzerBtn.classList.add('active');
+        buzzerBtn.querySelector('span').innerText = 'BUZZING';
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+
+        // Actual trigger
+        fetch(`/.netlify/functions/toggle?pin=${currentPin}`).catch(() => {});
+
+        // Visible for 4 sec then reset
+        setTimeout(() => {
+            resetToKeypad();
+        }, 4000);
+    }, 2000); 
+});
+
+function resetToKeypad() {
+    currentPin = '';
+    updateDisplay();
+    buzzerBtn.classList.remove('active');
+    buzzerBtn.querySelector('span').innerText = 'OPEN';
+    
+    viewBuzzer.style.display = 'none';
+    viewKeypad.style.display = 'flex';
+    viewKeypad.classList.add('active');
+}
