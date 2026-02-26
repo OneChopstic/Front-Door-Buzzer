@@ -7,7 +7,6 @@ const keypadContainer = document.querySelector('.keypad-container');
 const buzzerBtn = document.getElementById('buzzer-btn');
 
 let currentPin = '';
-const CORRECT_PIN = '1945'; // Client-side check for UI flow
 
 // --- KEYPAD LOGIC ---
 keys.forEach(key => {
@@ -17,7 +16,8 @@ keys.forEach(key => {
         if (key.id === 'clear-btn') {
             currentPin = '';
         } else if (key.id === 'submit-btn') {
-            verifyPin();
+            // Direct transition: Server will handle the actual PIN check
+            transitionToBuzzer();
             return;
         } else {
             if (currentPin.length < 4) {
@@ -30,59 +30,38 @@ keys.forEach(key => {
 
 function updateDisplay() {
     pinDisplay.value = '•'.repeat(currentPin.length);
-    if (currentPin.length === 4) {
-        submitBtn.disabled = false;
-        // Optional: Auto-submit? Let's stick to arrow button for clarity
-    } else {
-        submitBtn.disabled = true;
-    }
-}
-
-function verifyPin() {
-    // 1. Check PIN (Client-side fast check)
-    if (currentPin === CORRECT_PIN) {
-        // Success: Transition to Buzzer
-        transitionToBuzzer();
-    } else {
-        // Error: Shake
-        keypadContainer.classList.add('shake');
-        setTimeout(() => keypadContainer.classList.remove('shake'), 500);
-        currentPin = '';
-        updateDisplay();
-    }
+    submitBtn.disabled = currentPin.length !== 4;
 }
 
 function transitionToBuzzer() {
     viewKeypad.classList.remove('active');
-
-    // Slight delay for smooth fade
     setTimeout(() => {
-        viewBuzzer.classList.add('active');
+        viewKeypad.style.display = 'none';
+        viewBuzzer.style.display = 'flex';
+        setTimeout(() => viewBuzzer.classList.add('active'), 10);
     }, 500);
 }
 
-// --- BUZZER LOGIC ---
+// --- TRIGGER LOGIC ---
 buzzerBtn.addEventListener('click', async () => {
     if (buzzerBtn.classList.contains('loading') || buzzerBtn.classList.contains('active')) return;
 
-    // 1. UI Loading
     buzzerBtn.classList.add('loading');
-    buzzerBtn.querySelector('span').innerText = '...';
+    buzzerBtn.querySelector('span').innerText = 'WAIT...';
 
     try {
-        // 2. Call API (Server-side security check)
-        const response = await fetch(window.location.origin + '/.netlify/functions/toggle?pin=' + currentPin);
+        // Send the PIN to your Netlify function
+        const response = await fetch(`/.netlify/functions/toggle?pin=${currentPin}`);
 
         if (response.ok) {
             triggerSuccess();
         } else {
-            // Unexpected Error (e.g. server down or PIN changed on backend)
-            alert("Connection Error");
+            // If server returns 401 (Wrong PIN) or other error
+            alert("Access Denied");
             resetToKeypad();
         }
     } catch (error) {
-        console.error(error);
-        alert("Network Error");
+        alert("Connection Error");
         resetToKeypad();
     }
 });
@@ -91,27 +70,25 @@ function triggerSuccess() {
     buzzerBtn.classList.remove('loading');
     buzzerBtn.classList.add('active');
     buzzerBtn.querySelector('span').innerText = 'OPENING';
-
+    
     if (navigator.vibrate) navigator.vibrate([200]);
 
-    // Reset after 4 seconds
+    // Hold "OPENING" state for 6 seconds then auto-reset
     setTimeout(() => {
-        buzzerBtn.classList.remove('active');
-        buzzerBtn.querySelector('span').innerHTML = 'OPEN<br>DOOR';
-
-        // Optional: Do we stay here or go back to PIN?
-        // User didn't specify, but staying here makes it easy to open again.
-        // If security is key, we should go back. Let's stay for convenience for now.
-    }, 4000);
+        resetToKeypad();
+    }, 6000);
 }
 
 function resetToKeypad() {
-    buzzerBtn.classList.remove('loading');
+    currentPin = '';
+    updateDisplay();
+    buzzerBtn.classList.remove('loading', 'active');
     buzzerBtn.querySelector('span').innerHTML = 'OPEN<br>DOOR';
     viewBuzzer.classList.remove('active');
+    
     setTimeout(() => {
-        currentPin = '';
-        updateDisplay();
-        viewKeypad.classList.add('active');
+        viewBuzzer.style.display = 'none';
+        viewKeypad.style.display = 'flex';
+        setTimeout(() => viewKeypad.classList.add('active'), 10);
     }, 500);
 }
